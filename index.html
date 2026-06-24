@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Controle Financeiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===================== TELA DE LOGIN ===================== -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="brand">
+        <div class="brand-logo">G</div>
+        <div class="brand-name">GRÃO<span>FINANÇAS</span></div>
+      </div>
+      <h1 id="auth-title">Entrar na sua conta</h1>
+      <p class="auth-sub" id="auth-sub">Controle financeiro pessoal</p>
+
+      <form id="auth-form">
+        <label>E-mail</label>
+        <input type="email" id="auth-email" placeholder="voce@email.com" required />
+        <label>Senha</label>
+        <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required />
+        <button type="submit" class="btn-primary" id="auth-submit">Entrar</button>
+      </form>
+
+      <p class="auth-toggle">
+        <span id="auth-toggle-text">Ainda não tem conta?</span>
+        <a href="#" id="auth-toggle-link">Criar conta</a>
+      </p>
+      <div id="auth-msg" class="auth-msg"></div>
+      <div id="auth-config-warn" class="auth-warn" style="display:none">
+        ⚠️ Configure o Supabase em <code>js/config.js</code> antes de usar.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== APP ===================== -->
+  <div id="app" class="app" style="display:none">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">G</div>
+        <div class="brand-name">GRÃO<span>FINANÇAS</span></div>
+      </div>
+      <nav class="menu">
+        <a data-view="home" class="menu-item active"><span class="ico">🏠</span> Home</a>
+        <a data-view="lancamentos" class="menu-item"><span class="ico">↕</span> Lançamentos</a>
+        <a data-view="plano" class="menu-item"><span class="ico">🎯</span> Plano</a>
+        <a data-view="patrimonio" class="menu-item"><span class="ico">🏛</span> Patrimônio</a>
+        <a data-view="investimentos" class="menu-item"><span class="ico">📊</span> Investimentos</a>
+        <a data-view="contas" class="menu-item"><span class="ico">🗂</span> Contas</a>
+      </nav>
+      <button id="logout-btn" class="logout">Sair</button>
+    </aside>
+
+    <!-- Conteúdo -->
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <div class="greeting" id="greeting">Olá!</div>
+          <div class="subgreeting">Seu controle financeiro</div>
+        </div>
+        <div class="user-chip" id="user-chip">—</div>
+      </header>
+
+      <div id="view-container"></div>
+    </main>
+  </div>
+
+  <!-- ===================== MODAL GENÉRICO ===================== -->
+  <div id="modal" class="modal-backdrop" style="display:none">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modal-title">Título</h3>
+        <button class="modal-close" id="modal-close">×</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Bibliotecas (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- App -->
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

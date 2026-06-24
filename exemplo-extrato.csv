@@ -1,0 +1,9 @@
+data,estabelecimento,categoria,meio de pagamento,valor,tipo
+01/03/2026,Salario,Renda,Nubank - Lucas,18000.00,entrada
+05/03/2026,Aluguel,Casa,Cartão final 8228,2500.00,saida
+06/03/2026,Mercado São Luiz,Mercado,Cartão final 8228,860.12,saida
+08/03/2026,Restaurante Bom Sabor,Restaurantes,Cartão final 9494,420.00,saida
+09/03/2026,Uber,Transporte,Cartão final 9494,205.80,saida
+10/03/2026,Drogasil,Saúde,Cartão final 8228,180.50,saida
+10/03/2026,Netflix,Assinaturas e serviços,Cartão final 2097,55.90,saida
+11/03/2026,Academia,Esportes,Cartão final 8228,260.00,saida
