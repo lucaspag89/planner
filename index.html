@@ -17,20 +17,19 @@
         <div class="brand-logo">$</div>
         <div class="brand-name">MINHAS<span>FINANÇAS</span></div>
       </div>
-      <h1 id="auth-title">Entrar na sua conta</h1>
-      <p class="auth-sub" id="auth-sub">Controle financeiro pessoal</p>
+      <h1 id="auth-title">Acessar</h1>
+      <p class="auth-sub" id="auth-sub">Digite sua senha para entrar</p>
 
       <form id="auth-form">
-        <label>E-mail</label>
-        <input type="email" id="auth-email" placeholder="voce@email.com" required />
+        <input type="email" id="auth-email" autocomplete="username" style="display:none" />
         <label>Senha</label>
-        <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required />
+        <input type="password" id="auth-password" placeholder="••••••••" minlength="6"
+               autocomplete="current-password" required />
         <button type="submit" class="btn-primary" id="auth-submit">Entrar</button>
       </form>
 
-      <p class="auth-toggle">
-        <span id="auth-toggle-text">Ainda não tem conta?</span>
-        <a href="#" id="auth-toggle-link">Criar conta</a>
+      <p class="auth-toggle" id="auth-hint">
+        Na primeira vez, esta senha será cadastrada automaticamente.
       </p>
       <div id="auth-msg" class="auth-msg"></div>
       <div id="auth-config-warn" class="auth-warn" style="display:none">
@@ -93,7 +92,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <!-- App -->
-  <script src="js/config.js?v=5"></script>
-  <script src="js/app.js?v=5"></script>
+  <script src="js/config.js?v=6"></script>
+  <script src="js/app.js?v=6"></script>
 </body>
 </html>

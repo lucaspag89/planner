@@ -94,27 +94,11 @@ let chartRefs = [];
 function destroyCharts(){ chartRefs.forEach(c => { try{c.destroy();}catch(e){} }); chartRefs = []; }
 
 // ---------------------------------------------------------------------
-// AUTENTICAÇÃO
+// AUTENTICAÇÃO  (modo "senha única" para uso pessoal)
+// A tela pede só uma senha. O login usa um e-mail fixo (config.js).
+// Na primeira vez a conta é criada automaticamente com a senha digitada.
 // ---------------------------------------------------------------------
-let authMode = "login"; // ou "signup"
-
-function setAuthMode(mode){
-  authMode = mode;
-  $("#auth-title").textContent = mode === "login" ? "Entrar na sua conta" : "Criar sua conta";
-  $("#auth-submit").textContent = mode === "login" ? "Entrar" : "Criar conta";
-  $("#auth-toggle-text").textContent = mode === "login" ? "Ainda não tem conta?" : "Já tem conta?";
-  $("#auth-toggle-link").textContent = mode === "login" ? "Criar conta" : "Entrar";
-  const sub = $("#auth-sub");
-  if (sub) sub.textContent = mode === "login"
-    ? "Entre com seu e-mail e senha"
-    : "Defina um e-mail e uma senha (mín. 6 caracteres) e clique em Criar conta";
-  $("#auth-msg").textContent = "";
-}
-
-$("#auth-toggle-link").addEventListener("click", (e) => {
-  e.preventDefault();
-  setAuthMode(authMode === "login" ? "signup" : "login");
-});
+const LOGIN_EMAIL = window.APP_LOGIN_EMAIL || "app.pessoal@local.user";
 
 $("#auth-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -126,27 +110,42 @@ $("#auth-form").addEventListener("submit", async (e) => {
       : "Configure o Supabase em js/config.js antes de usar.";
     return;
   }
-  const email = $("#auth-email").value.trim();
   const password = $("#auth-password").value;
+  if (password.length < 6) {
+    msg.className = "auth-msg error";
+    msg.textContent = "A senha precisa ter pelo menos 6 caracteres.";
+    return;
+  }
   msg.className = "auth-msg";
   msg.textContent = "Aguarde...";
 
   try {
-    if (authMode === "signup") {
-      const { data, error } = await sb.auth.signUp({ email, password });
-      if (error) throw error;
-      // Se a confirmação de e-mail estiver desligada, já vem sessão -> loga sozinho
-      if (data.session && data.user) {
-        return; // onAuthStateChange abre o app
+    // 1) tenta entrar com a senha
+    const { error } = await sb.auth.signInWithPassword({ email: LOGIN_EMAIL, password });
+    if (!error) return; // sucesso -> onAuthStateChange abre o app
+
+    // 2) login falhou -> pode ser a primeira vez (conta ainda não existe)
+    if (/Invalid login/i.test(error.message)) {
+      const { data: su, error: e2 } = await sb.auth.signUp({ email: LOGIN_EMAIL, password });
+      if (e2) {
+        // já existe conta -> então a senha digitada está errada
+        if (/already registered|already exists/i.test(e2.message)) {
+          throw new Error("Senha incorreta.");
+        }
+        throw e2;
       }
-      // Caso contrário, mostra a mensagem DEPOIS de trocar o modo (setAuthMode limpa a msg)
-      setAuthMode("login");
+      if (su.session) return; // criou e já logou (confirmação de e-mail desligada)
+
+      // criou mas o Supabase exige confirmação de e-mail
+      const { error: e3 } = await sb.auth.signInWithPassword({ email: LOGIN_EMAIL, password });
+      if (!e3) return;
       msg.className = "auth-msg ok";
-      msg.textContent = "Conta criada! Confirme o e-mail (se solicitado) e depois faça login.";
-    } else {
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      msg.textContent = "Senha cadastrada! Desligue 'Confirm email' no Supabase " +
+        "(Authentication → Providers → Email) e clique em Entrar novamente.";
+      return;
     }
+    // 3) outro erro
+    throw error;
   } catch (err) {
     msg.className = "auth-msg error";
     msg.textContent = traduzErro(err.message);
@@ -949,5 +948,4 @@ async function seedSampleData(){
 // ---------------------------------------------------------------------
 // Bootstrap
 // ---------------------------------------------------------------------
-setAuthMode("login");
 initSupabase();

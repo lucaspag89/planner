@@ -50,10 +50,10 @@ A chave `anon` pode ficar pública com segurança porque o acesso é restringido
    window.SUPABASE_ANON_KEY = "eyJhbGciOi...";
    ```
 
-### 3. (Opcional) Facilitar o teste de login
-Por padrão o Supabase pede confirmação de e-mail no cadastro. Para testar mais
-rápido: **Authentication → Providers → Email** e desligue **"Confirm email"**.
-(Em uso real, deixe ligado.)
+### 3. (Importante no modo senha única) Desligar confirmação de e-mail
+Este app está no **modo de uso pessoal**: a tela pede só uma senha. Para a senha
+ser cadastrada e já entrar de primeira, vá em **Authentication → Providers → Email**
+e **desligue "Confirm email"**. Também deixe ligado **"Allow new users to sign up"**.
 
 ### 4. Publicar no GitHub Pages
 1. Crie um repositório novo no GitHub (ex: `controle-financeiro`).
@@ -80,14 +80,22 @@ Em **Authentication → URL Configuration**, adicione a URL do GitHub Pages em
 
 ---
 
-## Como usar
+## Como usar (modo senha única)
 
-1. Abra o site, clique em **Criar conta** e cadastre-se.
-2. Faça login.
+1. Abra o site. A tela pede apenas uma **senha**.
+2. Digite a senha que você quer usar (mín. 6 caracteres) e clique em **Entrar**.
+   - **Na primeira vez**, essa senha é cadastrada automaticamente e você já entra.
+   - **Nas próximas vezes**, basta digitar a mesma senha.
 3. Na tela **Lançamentos**, clique em **Carregar dados de exemplo** para ver tudo
    funcionando, ou:
    - **+ Novo lançamento** para cadastrar manualmente, ou
    - **Importar extrato (CSV)** para importar vários de uma vez.
+
+> O e-mail interno usado no login fica em `js/config.js` (`window.APP_LOGIN_EMAIL`)
+> — não precisa ser um e-mail real, é só o identificador da sua conta. Para acessar
+> de outro dispositivo, é só usar a mesma senha. Se esquecer a senha, dá para criar
+> outra conta trocando o `APP_LOGIN_EMAIL`, ou redefinir a senha pelo painel do Supabase
+> (Authentication → Users).
 
 ### Formato do CSV
 Use o arquivo `exemplo-extrato.csv` como modelo. Colunas aceitas (em qualquer ordem):
