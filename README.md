@@ -1,6 +1,6 @@
 # Meu Controle Financeiro
 
-Site de controle financeiro pessoal, inspirado no app Grão Planejamento.
+Site de controle financeiro pessoal.
 Tudo em **HTML/CSS/JS puro** no front-end (hospedado de graça no **GitHub Pages**)
 conectado a um **banco de dados Postgres** com API e login prontos no **Supabase**
 (plano gratuito). **Custo total: R$ 0,00.**
