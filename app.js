@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------
 // Inicialização do Supabase
 // ---------------------------------------------------------------------
-let supabase = null;
+let sb = null;
 const configOk =
   window.SUPABASE_URL &&
   window.SUPABASE_ANON_KEY &&
@@ -36,7 +36,7 @@ function initSupabase() {
     return;
   }
   try {
-    supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
     registerAuthListener();
   } catch (e) {
     console.error("Falha ao iniciar Supabase:", e);
@@ -104,6 +104,10 @@ function setAuthMode(mode){
   $("#auth-submit").textContent = mode === "login" ? "Entrar" : "Criar conta";
   $("#auth-toggle-text").textContent = mode === "login" ? "Ainda não tem conta?" : "Já tem conta?";
   $("#auth-toggle-link").textContent = mode === "login" ? "Criar conta" : "Entrar";
+  const sub = $("#auth-sub");
+  if (sub) sub.textContent = mode === "login"
+    ? "Entre com seu e-mail e senha"
+    : "Defina um e-mail e uma senha (mín. 6 caracteres) e clique em Criar conta";
   $("#auth-msg").textContent = "";
 }
 
@@ -115,7 +119,7 @@ $("#auth-toggle-link").addEventListener("click", (e) => {
 $("#auth-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const msg = $("#auth-msg");
-  if (!supabase) {
+  if (!sb) {
     msg.className = "auth-msg error";
     msg.textContent = configOk
       ? "Conexão com o Supabase não foi iniciada. Recarregue a página (a biblioteca pode não ter carregado)."
@@ -129,7 +133,7 @@ $("#auth-form").addEventListener("submit", async (e) => {
 
   try {
     if (authMode === "signup") {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await sb.auth.signUp({ email, password });
       if (error) throw error;
       // Se a confirmação de e-mail estiver desligada, já vem sessão -> loga sozinho
       if (data.session && data.user) {
@@ -140,7 +144,7 @@ $("#auth-form").addEventListener("submit", async (e) => {
       msg.className = "auth-msg ok";
       msg.textContent = "Conta criada! Confirme o e-mail (se solicitado) e depois faça login.";
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) throw error;
     }
   } catch (err) {
@@ -150,19 +154,25 @@ $("#auth-form").addEventListener("submit", async (e) => {
 });
 
 function traduzErro(m){
+  m = m || "Erro desconhecido";
   if (/Invalid login/i.test(m)) return "E-mail ou senha incorretos.";
-  if (/already registered/i.test(m)) return "Este e-mail já tem conta. Faça login.";
+  if (/already registered|already exists/i.test(m)) return "Este e-mail já tem conta. Faça login.";
   if (/Email not confirmed/i.test(m)) return "Confirme seu e-mail antes de entrar.";
+  if (/Signups? not allowed|signup is disabled/i.test(m)) return "Cadastro desativado no Supabase. Ative em Authentication → Providers → Email.";
+  if (/Password should be at least/i.test(m)) return "A senha precisa ter pelo menos 6 caracteres.";
+  if (/valid email|invalid format|Unable to validate email/i.test(m)) return "E-mail inválido.";
+  if (/rate limit|too many/i.test(m)) return "Muitas tentativas. Aguarde um instante e tente de novo.";
+  if (/Failed to fetch|NetworkError|fetch/i.test(m)) return "Falha de conexão com o Supabase. Verifique sua internet / a URL em config.js.";
   return m;
 }
 
 $("#logout-btn").addEventListener("click", async () => {
-  if (supabase) await supabase.auth.signOut();
+  if (sb) await sb.auth.signOut();
 });
 
 // Reage a login/logout (chamada por initSupabase, quando o cliente existe)
 function registerAuthListener() {
-  supabase.auth.onAuthStateChange((_event, session) => {
+  sb.auth.onAuthStateChange((_event, session) => {
     if (session && session.user) {
       state.user = session.user;
       showApp();
@@ -204,9 +214,9 @@ function navigate(view){
 // ---------------------------------------------------------------------
 // ACESSO A DADOS
 // ---------------------------------------------------------------------
-async function db(table){ return supabase.from(table); }
+async function db(table){ return sb.from(table); }
 async function fetchAll(table, order){
-  let q = supabase.from(table).select("*");
+  let q = sb.from(table).select("*");
   if (order) q = q.order(order.col, { ascending: order.asc });
   const { data, error } = await q;
   if (error) throw error;
@@ -396,7 +406,7 @@ function openTxModal(){
       amount: parseFloat($("#f-amount").value || "0"),
     };
     if (!rec.amount){ alert("Informe um valor."); return; }
-    const { error } = await supabase.from("transactions").insert(rec);
+    const { error } = await sb.from("transactions").insert(rec);
     if (error) return alert(error.message);
     closeModal(); navigate("lancamentos");
   });
@@ -475,7 +485,7 @@ async function handleCsv(e){
 
   if (!recs.length){ alert("Não encontrei valores válidos no CSV. Veja o modelo CSV."); e.target.value=""; return; }
   if (!confirm(`Importar ${recs.length} lançamento(s)?`)){ e.target.value=""; return; }
-  const { error } = await supabase.from("transactions").insert(recs);
+  const { error } = await sb.from("transactions").insert(recs);
   e.target.value = "";
   if (error) return alert(error.message);
   alert(`${recs.length} lançamento(s) importado(s)!`);
@@ -594,7 +604,7 @@ function openBudgetModal(existing){
     })).filter(r=>r.planned>0);
     // upsert por (user_id, month, category)
     if (rows.length){
-      const { error } = await supabase.from("budgets")
+      const { error } = await sb.from("budgets")
         .upsert(rows, { onConflict:"user_id,month,category" });
       if (error) return alert(error.message);
     }
@@ -698,7 +708,7 @@ function openAssetModal(cat){
       value:parseFloat($("#a-value").value||"0"),
       income_generating: isAtivo ? $("#a-renda").checked : false };
     if (!rec.name || !rec.value){ alert("Preencha nome e valor."); return; }
-    const { error } = await supabase.from("assets").insert(rec);
+    const { error } = await sb.from("assets").insert(rec);
     if (error) return alert(error.message);
     closeModal(); navigate("patrimonio");
   });
@@ -780,7 +790,7 @@ function openInvModal(){
       category:$("#i-cat").value, institution:$("#i-inst").value.trim(),
       value:parseFloat($("#i-value").value||"0") };
     if (!rec.product || !rec.value){ alert("Preencha produto e saldo."); return; }
-    const { error } = await supabase.from("investments").insert(rec);
+    const { error } = await sb.from("investments").insert(rec);
     if (error) return alert(error.message);
     closeModal(); navigate("investimentos");
   });
@@ -858,7 +868,7 @@ function openAccModal(kind){
     if (isCard){ rec.credit_limit=parseFloat($("#ac-limit").value||"0"); rec.used=parseFloat($("#ac-used").value||"0"); }
     else { rec.balance=parseFloat($("#ac-bal").value||"0"); rec.invested=parseFloat($("#ac-inv").value||"0"); }
     if (!rec.name){ alert("Informe um nome."); return; }
-    const { error } = await supabase.from("accounts").insert(rec);
+    const { error } = await sb.from("accounts").insert(rec);
     if (error) return alert(error.message);
     closeModal(); navigate("contas");
   });
@@ -869,7 +879,7 @@ function openAccModal(kind){
 // ---------------------------------------------------------------------
 async function delRow(table, id){
   if (!confirm("Excluir este item?")) return;
-  const { error } = await supabase.from(table).delete().eq("id", id);
+  const { error } = await sb.from(table).delete().eq("id", id);
   if (error) return alert(error.message);
   navigate(state.view);
 }
@@ -926,11 +936,11 @@ async function seedSampleData(){
   ].map(([category,planned])=>({ month:mk, category, planned, icon:catIcon(category) }));
 
   try{
-    await supabase.from("transactions").insert(tx);
-    await supabase.from("assets").insert(assets);
-    await supabase.from("accounts").insert(accounts);
-    await supabase.from("investments").insert(investments);
-    await supabase.from("budgets").upsert(budgets, { onConflict:"user_id,month,category" });
+    await sb.from("transactions").insert(tx);
+    await sb.from("assets").insert(assets);
+    await sb.from("accounts").insert(accounts);
+    await sb.from("investments").insert(investments);
+    await sb.from("budgets").upsert(budgets, { onConflict:"user_id,month,category" });
     alert("Dados de exemplo carregados!");
     navigate("home");
   }catch(err){ alert("Erro ao carregar exemplo: "+err.message); }
